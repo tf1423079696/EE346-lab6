@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 import cv2.aruco as aruco
 import time
 
+
 class Follower:
 
         def __init__(self):
@@ -29,11 +30,16 @@ class Follower:
                         "DICT_ARUCO_ORIGINAL": cv2.aruco.DICT_ARUCO_ORIGINAL
                 }
 
-                self.time0 = time.time(); 
+                self.time0 = time.time()
+                self.time1=0
                 self.corner=0
                 self.tem=cv2.imread("cor.png")
                 self.check = 'true'
                 self.close=0
+                self.left='true'
+                self.lefton=True
+                self.right='true'
+                self.reset='true'
                 self.bridge = cv_bridge.CvBridge()
 
                 self.image_sub = rospy.Subscriber('raspicam_node/image',
@@ -72,8 +78,8 @@ class Follower:
                 bev = cv2.warpPerspective(image, self.homography, (w,h)) 
                 gray = cv2.cvtColor(bev, cv2.COLOR_RGB2GRAY)
                 gray[gray<10] = 255     
-                #flag, gray_thresh = cv2.threshold(gray,120,255,cv2.THRESH_BINARY)
-		flag, gray_thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                flag, gray_thresh = cv2.threshold(gray,130,255,cv2.THRESH_BINARY)
+		#flag, gray_thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                 gray_mask = 255-gray_thresh
 		gray_mask[gray<10] = 0
 
@@ -108,7 +114,7 @@ class Follower:
                 M = cv2.moments(gray_mask)
                 time2 = time.time()
                 time_change = time2 - self.time0
-                print(time_change)
+                #print(time_change)
                 
                 if time_change<=4:
                     self.twist.linear.x=0.2
@@ -123,13 +129,16 @@ class Follower:
                     #self.cmd_vel_pub.publish(self.twist)
                      
 
-                if min_val < 0.3 and self.check == 'true':
+                if min_val < 0.45 and self.check == 'true':
                     self.corner=self.corner+1;
                     self.check = 'false'
                     self.close=time.time()
                 print(min_val, self.check,self.corner)
 
                 if M['m00'] > 0 and time_change >= 5.5: #4 for right;
+                    if self.reset=='true':  
+                        self.time0=0
+                        self.reset='false'
                 #if M['m00'] > 0 and time_change > 4 and self.corner<2:
                     cx = int(M['m10']/M['m00'])
                     cy = int(M['m01']/M['m00'])
@@ -142,16 +151,39 @@ class Follower:
                     err = w/2 - fpt_x
                     theta = math.atan2(err, fpt_y) 
 
-                    self.twist.angular.z =   0.5 * (err*90.0/160)/15 + 2 * theta 
-                    if self.corner >= 2:
-                    	self.twist.linear.x = 0.1
+                    
+                    if self.corner == 2 and self.lefton:
+                        self.twist.linear.x = 0.2
+                        self.twist.angular.z=0.0
+                        self.cmd_vel_pub.publish(self.twist)
+                        time.sleep(0.1)
+                        if self.left=='true':
+                            self.time1=time.time()
+                            self.left='false'
+                        time3=time.time()
+                        left=time3-self.time1
+                        if left<=2:
+                            time.sleep(0.4)
+                            self.twist.linear.x = 0.2
+                            self.twist.angular.z=0.05
+                            self.cmd_vel_pub.publish(self.twist)
+                        if left>2 and left<3.4:  
+                            
+                            self.twist.angular.z = 1
+                            self.twist.linear.x = 0.0
+                            self.cmd_vel_pub.publish(self.twist)
+                        if left>=3.4:
+                            self.lefton=False 
                     	#self.twist.angular.z = -1.5
+                     
                     else:
                             self.twist.linear.x = 0.2
+                            self.twist.angular.z =   0.5 * (err*90.0/160)/15 + 2 * theta   
+                            self.cmd_vel_pub.publish(self.twist) 
                     	    #print(4*theta,  (err*90.0/160)/15, self.twist.linear.x)
 
-                    #self.cmd_vel_pub.publish(self.twist)
-                    #print(self.twist.linear.x,self.twist.angular.z)      
+                    
+                    print(self.twist.linear.x,self.twist.angular.z)      
 	
 		#self.twist.linear.x = 0.0
                 #self.twist.angular.z = 0.0
