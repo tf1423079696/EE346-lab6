@@ -23,10 +23,10 @@ class MultiNav():
 
 
         locations = collections.OrderedDict()
-        locations['point-2'] = Pose(Point(13.2902641296, 14.8046016693, 0.00), Quaternion(0.000, 0.000, 0.000, 1.000))
-        locations['point-3'] = Pose(Point(10.8644618988, 18.1615200043, 0.00), Quaternion(0.000, 0.000, 0.000, 1.000))
-        locations['point-4'] = Pose(Point(7.50754356384, 15.4784355164, 0.00), Quaternion(0.000, 0.000, -0.100, 0.100))
-        locations['point-1'] = Pose(Point(10.1048669815, 11.9744987488, 0.00), Quaternion(0.000, 0.000, 0.000, 1.000)) #map3
+        locations['point-2'] = Pose(Point(13.55, 14.55, 0.000), Quaternion(0.000, 0.000, -0.1, 0.1))
+        locations['point-3'] = Pose(Point(10.93, 17.99, 0.00), Quaternion(0.000, 0.000, -0.1, 0.1))
+        locations['point-4'] = Pose(Point(7.54, 15.45, 0.00), Quaternion(0.000, 0.000, 0.3, 0.9600))
+        locations['point-1'] = Pose(Point(10.01, 11.97, 0.00), Quaternion(0.000, 0.000, 0.000, 1.000)) #map3
 
 
 
@@ -100,7 +100,7 @@ class MultiNav():
             self.move_base.send_goal(self.goal)  
   
             # Allow 5 minutes to get there  
-            finished_within_time = self.move_base.wait_for_result(rospy.Duration(360))  
+            finished_within_time = self.move_base.wait_for_result(rospy.Duration(420))  
   
             # Check for success or failure  
             if not finished_within_time:  

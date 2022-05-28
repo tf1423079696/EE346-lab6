@@ -31,6 +31,7 @@ class Follower:
                 }
 
                 self.time0 = time.time()
+		self.time_end = 0
                 self.time1=0
                 self.corner=0
                 self.tem=cv2.imread("cor.png")
@@ -40,6 +41,7 @@ class Follower:
                 self.lefton=True
                 self.right='true'
                 self.reset='true'
+		self.readyStop = False
                 self.bridge = cv_bridge.CvBridge()
 
                 self.image_sub = rospy.Subscriber('raspicam_node/image',
@@ -83,8 +85,6 @@ class Follower:
                 gray_mask = 255-gray_thresh
 		gray_mask[gray<10] = 0
 
-                (corners, ids, rejected) = cv2.aruco.detectMarkers(image, this_aruco_dictionary, parameters=this_aruco_parameters)
-
 		hsv = cv2.cvtColor(bev, cv2.COLOR_RGB2HSV)
 
 		lower_yellow = numpy.array([0, 0, 0])
@@ -107,14 +107,17 @@ class Follower:
                 gray_mask[0:h, search_right:w] = 0
                 #gray_mask[search_bot:h, 0:w] = 0
 
+                time2 = time.time()
+		#print(time_change)
+                time_change = time2 - self.time0
+		#if time_change >= 5.5:
                 RGB=cv2.cvtColor(gray_mask,cv2.COLOR_GRAY2BGR)
                 result=cv2.matchTemplate(RGB,self.tem, cv2.TM_SQDIFF_NORMED,-1)
                 min_val,max_val,min_loc,max_loc=cv2.minMaxLoc(result)
 		#print(min_val)
+
                 M = cv2.moments(gray_mask)
-                time2 = time.time()
-                time_change = time2 - self.time0
-                #print(time_change)
+                
                 
                 if time_change<=4:
                     self.twist.linear.x=0.2
@@ -129,7 +132,7 @@ class Follower:
                     #self.cmd_vel_pub.publish(self.twist)
                      
 
-                if min_val < 0.45 and self.check == 'true':
+                if min_val < 0.52 and self.check == 'true':
                     self.corner=self.corner+1;
                     self.check = 'false'
                     self.close=time.time()
@@ -154,28 +157,48 @@ class Follower:
                     
                     if self.corner == 2 and self.lefton:
                         self.twist.linear.x = 0.2
-                        self.twist.angular.z=0.0
+                        self.twist.angular.z = 0.3
                         self.cmd_vel_pub.publish(self.twist)
-                        time.sleep(0.1)
+                        time.sleep(7.3)
                         if self.left=='true':
                             self.time1=time.time()
                             self.left='false'
-                        time3=time.time()
-                        left=time3-self.time1
-                        if left<=2:
-                            time.sleep(0.4)
-                            self.twist.linear.x = 0.2
-                            self.twist.angular.z=0.05
-                            self.cmd_vel_pub.publish(self.twist)
-                        if left>2 and left<3.4:  
-                            
-                            self.twist.angular.z = 1
-                            self.twist.linear.x = 0.0
-                            self.cmd_vel_pub.publish(self.twist)
-                        if left>=3.4:
-                            self.lefton=False 
+                      	self.lefton=False 
                     	#self.twist.angular.z = -1.5
                      
+		    elif self.corner >= 4:
+			if self.readyStop == False:
+				self.time_end = time.time()
+				self.readyStop = True
+			time4 = time.time()
+			dur = time4 - self.time_end
+			if dur <= 3.1:
+				self.twist.linear.x = 0.2
+				self.twist.angular.z = 0.0
+  				#self.cmd_vel_pub.publish(self.twist)
+			
+			elif dur <= 3.7:
+				self.twist.linear.x = 0.02
+                        	self.twist.angular.z = -1.2
+  				self.cmd_vel_pub.publish(self.twist)
+				time.sleep(1.5)
+		
+                 	else:
+				self.twist.linear.x = 2.0
+                        	self.twist.angular.z = 0.0
+                        	self.cmd_vel_pub.publish(self.twist)
+                		(corners, ids, rejected) = cv2.aruco.detectMarkers(image, this_aruco_dictionary, parameters=this_aruco_parameters)
+				if len(corners) > 0:
+					while True:
+						print("Ready to Stop!")
+						self.twist.linear.x = 2.0
+						self.cmd_vel_pub.publish(self.twist)
+						time.sleep(3.8)
+						self.twist.linear.x = 0.0
+						self.cmd_vel_pub.publish(self.twist)
+						print("Stop!")
+						time.sleep(1000)
+
                     else:
                             self.twist.linear.x = 0.2
                             self.twist.angular.z =   0.5 * (err*90.0/160)/15 + 2 * theta   
