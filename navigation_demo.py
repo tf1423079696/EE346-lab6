@@ -12,7 +12,8 @@ class MultiNav():
         rospy.init_node('MultiNav', anonymous=True)  
         rospy.on_shutdown(self.shutdown)  
   
-        self.rest_time = rospy.get_param("~rest_time", 10)  
+        self.rest_time = rospy.get_param("~rest_time", 3)
+	self.rest_time_mid = rospy.get_param("~rest_time", 0.5)
   
         self.fake_test = rospy.get_param("~fake_test", True)  
   
@@ -23,10 +24,14 @@ class MultiNav():
 
 
         locations = collections.OrderedDict()
-        locations['point-2'] = Pose(Point(13.55, 14.55, 0.000), Quaternion(0.000, 0.000, -0.1, 0.1))
-        locations['point-3'] = Pose(Point(10.93, 17.99, 0.00), Quaternion(0.000, 0.000, -0.1, 0.1))
-        locations['point-4'] = Pose(Point(7.54, 15.45, 0.00), Quaternion(0.000, 0.000, 0.3, 0.9600))
-        locations['point-1'] = Pose(Point(10.01, 11.97, 0.00), Quaternion(0.000, 0.000, 0.000, 1.000)) #map3
+        locations['point-2'] = Pose(Point(0.155, 0.059, 0.000), Quaternion(0.000, 0.000, -0.0208198192148, 0.999783244072))
+        locations['point-2-3-1'] = Pose(Point(1.73499941826, -1.84999990463, 0.000), Quaternion(0.000, 0.000, -0.645207403619, 0.76400746483))
+        locations['point-2-3-2'] = Pose(Point(1.89852333069, -3.92018890381, 0.000), Quaternion(0.000, 0.000, -0.988215959737, 0.15306605411))
+        locations['point-3'] = Pose(Point(-0.237, -4.01199965668, 0.000), Quaternion(0.000, 0.000, -0.0389732523175,  0.999240254195))
+        locations['point-4'] = Pose(Point(3.74499893188, -4.26999998093, 0.000), Quaternion(0.000, 0.000, 0.999059706664, 0.0433555362052))
+        locations['point-4-1-1'] = Pose(Point(1.98499941826, -3.41999912262, 0.000), Quaternion(0.000, 0.000, 0.707106796641, 0.707106765732))
+        locations['point-4-1-2'] = Pose(Point(2.20499968529, -0.810000240803, 0.000), Quaternion(0.000, 0.000, -0.0312045236032, 0.999513020279))
+        locations['point-1'] = Pose(Point(4.212, -0.240, 0.000), Quaternion(0.000, 0.000, 0.000, 1.000)) #map3
 
 
 
@@ -70,10 +75,10 @@ class MultiNav():
             rospy.sleep(1)
           
         rospy.loginfo("Starting navigation test")  
-  
+  	num = 0
         # Begin the navigation loop and visit a sequence of locations  
         for location in locations.keys():  
-  
+  	    num+=1
             rospy.loginfo("Updating current pose.")  
             distance = sqrt(pow(locations[location].position.x  
                            - initial_pose.pose.pose.position.x, 2) +  
@@ -124,15 +129,18 @@ class MultiNav():
                           str(n_goals) + " = " + str(100 * n_successes/n_goals) + "%")  
             rospy.loginfo("Running time: " + str(trunc(running_time, 1)) +  
                           " min Distance: " + str(trunc(distance_traveled, 1)) + " m")  
-            rospy.sleep(self.rest_time)  
-  
+	    if num == 2 or num == 3 or num == 6 or num==7:
+		rospy.sleep(self.rest_time_mid) 
+            else:
+                rospy.sleep(self.rest_time)  
+            print(num)
     def update_initial_pose(self, initial_pose):  
         self.initial_pose = initial_pose  
   
     def shutdown(self):  
         rospy.loginfo("Stopping the robot...")  
         self.move_base.cancel_goal()  
-        rospy.sleep(2)  
+        rospy.sleep(1)  
         self.cmd_vel_pub.publish(Twist())  
         rospy.sleep(1)  
         

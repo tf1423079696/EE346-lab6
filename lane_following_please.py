@@ -159,7 +159,7 @@ class Follower:
                         self.twist.linear.x = 0.2
                         self.twist.angular.z = 0.3
                         self.cmd_vel_pub.publish(self.twist)
-                        time.sleep(7.3)
+                        time.sleep(6.75)
                         if self.left=='true':
                             self.time1=time.time()
                             self.left='false'
@@ -177,9 +177,9 @@ class Follower:
 				self.twist.angular.z = 0.0
   				#self.cmd_vel_pub.publish(self.twist)
 			
-			elif dur <= 3.7:
+			elif dur <= 3.3:
 				self.twist.linear.x = 0.02
-                        	self.twist.angular.z = -1.2
+                        	self.twist.angular.z = -1.05
   				self.cmd_vel_pub.publish(self.twist)
 				time.sleep(1.5)
 		
@@ -193,7 +193,7 @@ class Follower:
 						print("Ready to Stop!")
 						self.twist.linear.x = 2.0
 						self.cmd_vel_pub.publish(self.twist)
-						time.sleep(3.8)
+						time.sleep(4.15)
 						self.twist.linear.x = 0.0
 						self.cmd_vel_pub.publish(self.twist)
 						print("Stop!")
