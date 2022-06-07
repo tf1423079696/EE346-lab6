@@ -1,6 +1,8 @@
 # EE346-lab6
 Codes of EE346 Mobile Robot Navigation and Control Lab6.
 
+Use "git clone https://github.com/tf1423079696/EE346-lab6.git" to download the codes and all supporting files.
+
 The "camerav2_320x240.yaml" is the camera information and parameters obtained by calibration.
 
 The "lane_following_please.py" is the codes for line following.
